@@ -1,5 +1,5 @@
 # GPUFluid
-GPU-based 2D incompressible fluid sim using OpenCL with JOCL Java wrapper
+GPU-based fluid sim using OpenCL with JOCL Java wrapper
 
 Fluid sim is 2D incompressible Navier-Stokes solver based on "Stable Fluids" 1999 paper by Jos Stam
 
