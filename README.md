@@ -9,3 +9,6 @@ The Java code contains a high-level wrapper for OpenCL, and the implementation o
 Some image post-processing is done on the CPU. There is also a simple GUI to control rendering options.
 
 The OpenCL kernels are in the "kernels" directory.
+
+![](/nebula2.png?raw=true)
+![](/nebula1.png?raw=true)
