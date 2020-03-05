@@ -12,3 +12,4 @@ The OpenCL kernels are in the "kernels" directory.
 
 ![](/nebula2.png?raw=true)
 ![](/nebula1.png?raw=true)
+![](/nebula3.png?raw=true)
