@@ -1,5 +1,8 @@
 import org.jocl.cl_event;
 
+// Jacobi solver operation for Poisson equasion. Built out of an OpChain which alternates between
+// setting boundary conditions and doing the Jacobi iteration for however many iterations specified.
+
 public class JacobiSolve2DOp implements CLOperation{
 	CLOperation op;
 	

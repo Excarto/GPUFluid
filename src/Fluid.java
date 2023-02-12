@@ -1,6 +1,9 @@
 import static java.lang.Math.*;
 import org.jocl.*;
 
+// Main class that creates a Fluid2D object, initializes it with some arbitrary starting data,
+// and creates a FluidGUI object
+
 public class Fluid{
 	
 	public static final boolean DEBUG = false;
@@ -8,8 +11,8 @@ public class Fluid{
 	public static void main(String[] args){
 		CL.setExceptionsEnabled(true);
 		
-		int minSizeX = 1920 + 2*FluidGUI.BORDER_SIZE - 200;
-		int minSizeY = 1080 + 2*FluidGUI.BORDER_SIZE;
+		int minSizeX = 1000;//1920 + 2*FluidGUI.BORDER_SIZE - 200;
+		int minSizeY = 1000;//1080 + 2*FluidGUI.BORDER_SIZE;
 		int maxSizeX = minSizeX + 30;
 		int maxSizeY = minSizeY + 30;
 		

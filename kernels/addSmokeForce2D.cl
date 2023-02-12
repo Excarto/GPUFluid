@@ -1,4 +1,6 @@
 
+// Add acceleration due to bouyancy force
+
 __kernel
 void addSmokeForce2D(__global const float* dyedat,
 		__global const float* tempdat,

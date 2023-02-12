@@ -1,4 +1,7 @@
 
+// Correction term to add vorticity back into the velocity fields, as there is an artificial
+// loss between iterations. Cannot currently find the reference for this term
+
 __kernel
 void vortex2D(__global const float* invelX,
 		  __global const float* invelY,

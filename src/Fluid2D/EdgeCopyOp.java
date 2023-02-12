@@ -1,5 +1,8 @@
 import org.jocl.cl_event;
 
+// Operation for satisfying boundary conditions by copying the data from the cells adjacent to the boundary
+// to the cells on the boundary, possibly with a change of sign
+
 public class EdgeCopyOp implements CLOperation{
 	CLOperation op;
 	
@@ -9,14 +12,14 @@ public class EdgeCopyOp implements CLOperation{
 			boolean positiveBoundary){
 		
 		CLProgram copyTopProgram = device.getProgram("edgeCopyTop2D",
-			new long[]{dim.sizeX},
-			new long[]{dim.sizeX/(device.numComputeUnits - 1)});
+				new long[]{dim.sizeX},
+				null);//new long[]{dim.sizeX/(device.numComputeUnits - 1)});
 		copyTopProgram.addConstants(dim.getConstants());
 		copyTopProgram.addConstant("MULT", positiveBoundary ? 1 : -1);
 		
 		CLProgram copySideProgram = device.getProgram("edgeCopySide2D",
 				new long[]{dim.sizeY},
-				new long[]{dim.sizeY/(device.numComputeUnits - 1)});
+				null);//new long[]{dim.sizeY/(device.numComputeUnits - 1)});
 		copySideProgram.addConstants(dim.getConstants());
 		copySideProgram.addConstant("MULT", positiveBoundary ? 1 : -1);
 		

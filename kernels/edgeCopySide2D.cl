@@ -1,4 +1,7 @@
 
+// Copy values from just inside the left and right edges onto the left and right edges,
+// possibly with a sign change
+
 __kernel
 void edgeCopySide2D(__global float* dat){
 	

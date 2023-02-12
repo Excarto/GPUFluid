@@ -1,5 +1,7 @@
 import org.jocl.cl_event;
 
+// An operation defined by a set of suboperations which are executed in sequence
+
 public class OpChain implements CLOperation{
 	
 	private final CLOperation[] ops;

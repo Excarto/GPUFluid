@@ -1,6 +1,8 @@
 import org.jocl.cl_event;
 import java.util.*;
 
+// An operation defined by a set of suboperations which may be executed in any order or in parallel
+
 public class OpGroup implements CLOperation{
 	
 	private final CLOperation[] ops;

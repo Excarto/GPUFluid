@@ -1,4 +1,8 @@
 
+// Prolongation of an NxN grid to a 2Nx2N grid. Used as part of a multigrid solver.
+// This is implemented as a block operation, with threads in the group synchronously loading the block data
+// into a local buffer before operating to avoid redundant memory transfers
+
 __kernel
 void prolongate2D(__global const float* indat,
           __global float* outdat){

@@ -1,4 +1,6 @@
 
+// Compute divergence.
+
 __kernel
 void divergence2D(__global const float* indatX,
 		  __global const float* indatY,

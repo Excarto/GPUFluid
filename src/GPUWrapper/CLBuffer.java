@@ -2,6 +2,9 @@ import static java.lang.Math.*;
 import static org.jocl.CL.*;
 import org.jocl.*;
 
+// Wrapper for the cl_mem object. Contains tso constructors - one for creating a new buffer,
+// and one for creating a sub-buffer given an existing CLBuffer and an offset
+
 public class CLBuffer{
 	
 	final CLDevice device;
@@ -64,6 +67,7 @@ public class CLBuffer{
 	
 	public void read(float[] data){
 		long len = min(nBytes, 4l*data.length);
+		//System.out.println(len + " " + size + " " + nBytes + " " + isSubBuffer);
 		clEnqueueReadBuffer(
 				device.getQueue(), buffer, CL_TRUE, 0, len, Pointer.to(data), 0, null, null);
 	}

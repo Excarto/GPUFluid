@@ -1,4 +1,6 @@
 
+// Single iteration of a Jacobi solver using a 9-point stencil.
+
 __kernel
 void jacobi9P2D(__global const float* bdat,
           __global float* xdatIn,

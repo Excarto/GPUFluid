@@ -1,4 +1,6 @@
 
+// Prolongation of an NxN grid to a 2Nx2N grid. Used as part of a multigrid solver.
+
 __kernel
 void prolongate2D(__global const float* indat,
           __global float* outdat){

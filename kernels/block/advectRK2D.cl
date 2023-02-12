@@ -1,4 +1,8 @@
 
+// Advection of 3 quantities within a velocity field using 4th order Runge-Kutta for extrapolation of trajectory.
+// This is implemented as a block operation, with threads in the group synchronously loading the block data
+// into a local buffer before operating to avoid redundant memory transfers
+
 struct BilinDat{
 	float amt;
 	float amtDx;

@@ -3,6 +3,10 @@ import java.nio.*;
 import org.jocl.*;
 import java.util.*;
 
+// Wrapper for GPU device. Does not currently support multiple GPUs, and will just find
+// one GPU on the device to use. Will use multiple queues on the same device to improve
+// performance is the parallel input argument is set to true, and the device supports it.
+
 public class CLDevice{
 	
 	static final boolean ENABLE_TIMING = false;
@@ -10,7 +14,7 @@ public class CLDevice{
 	public final cl_device_id device;
 	public final cl_context context;
 	
-	
+	// Useful info queried from device
 	public final int numComputeUnits;
 	public final int maxGroupSize;
 	public final long globalMemSize;
@@ -23,6 +27,8 @@ public class CLDevice{
 	
 	private final cl_command_queue[] queues;
 	private int queueIndex;
+	
+	// Current state of the device stored here
 	private ArrayList<CLProgram> programs;
 	private ArrayList<CLBuffer> buffers;
 	private ArrayList<cl_event> events;
@@ -39,6 +45,7 @@ public class CLDevice{
         cl_platform_id platforms[] = new cl_platform_id[numPlatforms];
         clGetPlatformIDs(platforms.length, platforms, null);
         
+        // Grab the first GPU device found
         cl_platform_id devicePlatform = null;
         cl_device_id deviceId = null;
         for (cl_platform_id platformId : platforms){
@@ -63,6 +70,7 @@ public class CLDevice{
         	System.exit(1);
         }
         
+        // Query some useful information
         numComputeUnits = getInt(device, CL_DEVICE_MAX_COMPUTE_UNITS);
         maxGroupSize = (int)getSize(device, CL_DEVICE_MAX_WORK_GROUP_SIZE);
         localMemSize = (int)getLong(device, CL_DEVICE_LOCAL_MEM_SIZE);
@@ -79,11 +87,13 @@ public class CLDevice{
         String deviceExtensionsString = new String(deviceExtensions);
         byteStore = deviceExtensionsString.contains("cl_khr_byte_addressable_store");
         
+        // Initialize device context
         cl_context_properties contextProperties = new cl_context_properties();
         contextProperties.addProperty(CL_CONTEXT_PLATFORM, devicePlatform);
 		context = clCreateContext(
             contextProperties, 1, new cl_device_id[]{device}, null, null, null);
 		
+		// Initialize queues
 		cl_queue_properties properties = new cl_queue_properties();
 		if (ENABLE_TIMING)
             properties.addProperty(CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE);
@@ -93,34 +103,40 @@ public class CLDevice{
 			queues[i] = clCreateCommandQueueWithProperties(context, device, properties, null);
 	}
 	
+	// Initialize program given file name
 	public CLProgram getProgram(String name, long[] nThreads, long[] groupSize){
 		CLProgram program = new CLProgram(this, name, nThreads, groupSize);
 		programs.add(program);
 		return program;
 	}
 	
+	// Initialize new buffer on device
 	public CLBuffer getBuffer(int size, boolean readable, boolean writable){
 		CLBuffer buffer = new CLBuffer(this, size, readable, writable);
 		buffers.add(buffer);
 		return buffer;
 	}
 	
+	// Initialize sub-buffer on device given existing buffer and offset
 	public CLBuffer getBuffer(CLBuffer existing, int offsetSize, int size){
 		CLBuffer buffer = new CLBuffer(existing, offsetSize, size);
 		buffers.add(buffer);
 		return buffer;
 	}
 	
+	// Iterate through which queue to use
 	public cl_command_queue getQueue(){
 		return queues[(queueIndex++)%numQueues];
 	}
 	
+	// Initialize new event. The event has no use until it's passed to another OpenCL function call
 	public cl_event getEvent(){
 		cl_event event = new cl_event();
 		events.add(event);
 		return event;
 	}
 	
+	// Run an operation, wait for it to complete, then dispose of all current events
 	public void run(CLOperation op){
 		cl_event[] finalEvents = op.enqueue(new cl_event[]{});
 		clWaitForEvents(finalEvents.length, finalEvents);
@@ -138,6 +154,7 @@ public class CLDevice{
 		return sum;
 	}
 	
+	// Cleanup all resources currently in use
 	public void dispose(){
     	if (programs == null)
     		return;
@@ -152,18 +169,21 @@ public class CLDevice{
     	buffers = null;
     }
 	
+	// Query device for given parameter value
 	private int getInt(cl_device_id device, int param){
         int values[] = new int[1];
         clGetDeviceInfo(device, param, Sizeof.cl_int, Pointer.to(values), null);
         return values[0];
     }
     
+	// Query device for given parameter value
     private long getLong(cl_device_id device, int param){
         long values[] = new long[1];
         clGetDeviceInfo(device, param, Sizeof.cl_long, Pointer.to(values), null);
         return values[0];
     }
     
+    // Query device for given parameter value
     private long getSize(cl_device_id device, int param){
         ByteBuffer buffer = ByteBuffer.allocate(Sizeof.size_t).order(ByteOrder.nativeOrder());
         clGetDeviceInfo(device, param, Sizeof.size_t, Pointer.to(buffer), null);

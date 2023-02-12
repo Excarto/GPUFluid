@@ -1,4 +1,8 @@
 
+// Single iteration of a Jacobi solver using a 9-point stencil.
+// This is implemented as a block operation, with threads in the group synchronously loading the block data
+// into a local buffer before operating to avoid redundant memory transfers
+
 __kernel
 void jacobi9P2D(__global const float* bdat,
           __global float* xdat,

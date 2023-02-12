@@ -8,6 +8,9 @@ import java.awt.image.*;
 import javax.imageio.*;
 import java.io.*;
 
+// Graphical interface for controlling the Fluid2D sim, as well as viewing the simulation state and
+// controlling a number of rendering options.
+
 public class FluidGUI{
 	
 	double[] LIGHT_SOURCE = normalized(new double[]{-1.2, -1, 0.3});
@@ -25,6 +28,7 @@ public class FluidGUI{
 	JTextField scaleField, framerateField;
 	JCheckBox gradBox;
 	
+	// Rendering controls
 	JSlider l1max, l2max, l1val, l2val, l3max, l3val;
 	JSlider gradMag, gradDir;
 	JTextField gradMult, dirPow;
@@ -155,7 +159,7 @@ public class FluidGUI{
 		});
 		
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setPreferredSize(new Dimension(sizeX, 40));
+		buttonPanel.setPreferredSize(new Dimension(sizeX, 80));
 		buttonPanel.add(iterLabel);
 		buttonPanel.add(timingLabel);
 		buttonPanel.add(displayBox);
@@ -205,7 +209,7 @@ public class FluidGUI{
 		
 		if (separateOptions){
 			JPanel separatePanel = new JPanel();
-			separatePanel.setPreferredSize(new Dimension(1000, 140));
+			separatePanel.setPreferredSize(new Dimension(1000, 180));
 			separatePanel.add(buttonPanel);
 			separatePanel.add(renderPanel);
 			JFrame separateFrame = new JFrame("Controls");
@@ -235,7 +239,10 @@ public class FluidGUI{
 		}.start();
 	}
 	
+	// Main simulation control method run in reparate thread.
 	private void run(){
+		
+		// Each loop iterates the simulation, then if necessary, refreshes the GUI.
 		while (running){
 			CountDownLatch latch = pauseLatch;
 			if (latch != null){
@@ -263,6 +270,7 @@ public class FluidGUI{
 		System.exit(0);
 	}
 	
+	// Copy data back from GPU for display
 	private void copyDisplayData(){
 		dataIter = iter;
 		DisplayMode mode = (DisplayMode)displayBox.getSelectedItem();
@@ -287,6 +295,7 @@ public class FluidGUI{
 		}
 	}
 	
+	// Update the GUI frame. Calls a sepearte thread to construct the image in order to not slow down the simulation
 	public void refresh(){
 		if (!rendering){
 			rendering = true;
@@ -319,6 +328,7 @@ public class FluidGUI{
 		}
 	}
 	
+	// Generate image from simulation data based on GUI settings
 	private void generateFluidImage(){
 		double scale = 1.0;
 		try{
@@ -384,7 +394,6 @@ public class FluidGUI{
 					g2d.fillRect(posX, posY, pixelSize, pixelSize);
 				}
 				
-				
 				//boolean signed = displayBox.getSelectedItem() != DisplayMode.DYE;
 				//g2d.setColor(getColor(val, signed, scale));
 				//g2d.fillRect(posX, posY, pixelSize, pixelSize);
@@ -394,6 +403,7 @@ public class FluidGUI{
 		g2d.dispose();
 	}
 	
+	// Main window panel that displays the rendered image
 	public class DisplayPanel extends JComponent{
 		
 		public DisplayPanel(){
@@ -410,6 +420,8 @@ public class FluidGUI{
 		}
 	}
 	
+	// Map from sim data to alpha value for rendering based on slider settings. Alpha is computed
+	// from three linear interpolation ranges
 	private double getGUIAlpha(double val){
 		double l1max = this.l1max.getValue()/100.0;
 		double l2max = this.l2max.getValue()/100.0;
@@ -435,6 +447,7 @@ public class FluidGUI{
 		return alpha;
 	}
 	
+	// Output image to file
 	static final int BORDER_SIZE = 10;
 	private void save(){
 		BufferedImage borderless = fluidImage.getSubimage(BORDER_SIZE, BORDER_SIZE,
@@ -454,6 +467,7 @@ public class FluidGUI{
 				lightness+0+(int)(pow(random(), 4.0)*20));
 	}
 	
+	// Compute magnitude of numerical gradient of sim data
 	private double gradMag(float[] data, int x, int y){
 		if (y == 0 || y == fluid.dim.sizeY-1 || x == 0 || x == fluid.dim.sizeX-1)
 			return 0.0;
@@ -464,6 +478,7 @@ public class FluidGUI{
 		return sqrt(dx*dx + dy*dy);
 	}
 	
+	// Compute projection of numerical gradient along light source vector
 	private double gradDir(float[] data, int x, int y){
 		if (y == 0 || y == fluid.dim.sizeY-1 || x == 0 || x == fluid.dim.sizeX-1)
 			return 0.0;

@@ -1,5 +1,9 @@
 import org.jocl.cl_event;
 
+// Multigrid solver operation for the Poisson equasion. Consists of successive stages of grid restriction,
+// followed by successive alternating stages of Jacobi solver and then prolongation. Operations to fix boundary
+// conditions are included between each step.
+
 public class MultigridSolve2DOp implements CLOperation{
 	private final CLOperation op;
 	
@@ -16,6 +20,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			return;
 		}
 		
+		// Single-gird version is just a Jacobi solver
 		if (numGrids == 1){
 			op = new JacobiSolve2DOp(device,
 					inputBuf, solutionBuf,
@@ -25,6 +30,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			return;
 		}
 		
+		// Determine block dimensions for each grid stage
 		BlockDimensions2D[] gridDims = new BlockDimensions2D[numGrids];
 		BlockDimensions2D[] restrictDims = new BlockDimensions2D[numGrids];
 		String[][][] dimConstants = new String[numGrids][][];
@@ -43,6 +49,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			dimConstants[i] = gridDims[i].getConstants();
 		}
 		
+		// Initialize buffers
 		CLBuffer[] inputBufs = new CLBuffer[numGrids];
 		inputBufs[0] = inputBuf;
 		int bufOffset = 0;
@@ -60,17 +67,18 @@ public class MultigridSolve2DOp implements CLOperation{
 		for (int i = 3; i < numGrids; i++)
 			solutionBufs[i] = solutionBufs[i-2];
 		
+		// Define boundary condition programs for each grid stage
 		CLProgram[][] edgePrograms = new CLProgram[numGrids][2];
 		for (int i = 0; i < numGrids; i++){
 			CLProgram copyTopProgram = device.getProgram("edgeCopyTop2D",
-			new long[]{gridDims[i].sizeX},
-			new long[]{gridDims[i].sizeX/(device.numComputeUnits - 1)});
+					new long[]{gridDims[i].sizeX},
+					null);//new long[]{gridDims[i].sizeX/(device.numComputeUnits - 1)});
 			copyTopProgram.addConstants(dimConstants[i]);
 			copyTopProgram.addConstant("MULT", positiveBoundary ? 1 : -1);
 			
 			CLProgram copySideProgram = device.getProgram("edgeCopySide2D",
 					new long[]{gridDims[i].sizeY},
-					new long[]{gridDims[i].sizeY/(device.numComputeUnits - 1)});
+					null);//new long[]{gridDims[i].sizeY/(device.numComputeUnits - 1)});
 			copySideProgram.addConstants(dimConstants[i]);
 			copySideProgram.addConstant("MULT", positiveBoundary ? 1 : -1);
 			
@@ -78,6 +86,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			edgePrograms[i][1] = copySideProgram;
 		}
 		
+		// Restriction programs for each grid stage
 		CLProgram[] restrictPrograms = new CLProgram[numGrids];
 		for (int i = 0; i < numGrids-1; i++){
 			BlockDimensions2D outDim = restrictDims[i+1];
@@ -90,6 +99,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			restrictPrograms[i].addConstant("IN_SIZE_X", (outDim.sizeX - 2)*2 + 2);
 		}
 		
+		// Prolongation programs for each grid stage
 		CLProgram[] prolongatePrograms = new CLProgram[numGrids];
 		for (int i = 1; i < numGrids; i++){
 			BlockDimensions2D inDim = gridDims[i];
@@ -102,6 +112,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			prolongatePrograms[i].addConstant("OUT_SIZE_X", outDim.sizeX);
 		}
 		
+		// Restrict operations and associated boundary conndition operations for each grid stage
 		CLOperation[] restrictOps = new CLOperation[numGrids];
 		for (int i = 0; i < numGrids-1; i++){
 			CLKernel restrict = restrictPrograms[i].getKernel();
@@ -113,6 +124,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			});
 		}
 		
+		// Jacobi solver, prolongation operation, and boundary condition operation for each grid stage
 		CLOperation[] solveOps = new CLOperation[numGrids];
 		CLOperation[] prolongateOps = new CLOperation[numGrids];
 		for (int i = numGrids-1; i >= 0; i--){
@@ -133,6 +145,7 @@ public class MultigridSolve2DOp implements CLOperation{
 			}
 		}
 		
+		// Finally, construct the overall operation from the successive restrict, solve, and prolongate operations
 		CLOperation[] ops = new CLOperation[numGrids + 2*(numGrids-1)];
 		for (int i = 0; i < numGrids-1; i++)
 			ops[i] = restrictOps[i];

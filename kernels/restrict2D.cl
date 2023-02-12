@@ -1,4 +1,6 @@
 
+// Restriction of a 2Nx2N grid to an NxN grid. Used as part of a multigrid solver.
+
 __kernel
 void restrict2D(__global const float* indat,
           __global float* outdat){

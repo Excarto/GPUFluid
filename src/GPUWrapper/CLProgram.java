@@ -3,6 +3,10 @@ import java.io.*;
 import org.jocl.*;
 import java.util.*;
 
+// Wrapper for the cl_program object. It is initialized with the path to a .cl source file, and contains methods
+// for adding constant definitions to the file and for compiling the program. Once compiled, it generates
+// CLKernel objects which are used to execute the program.
+
 public class CLProgram{
 	
 	public final String name;
@@ -51,6 +55,7 @@ public class CLProgram{
 		builder.insert(0, "#define " + name + " " + value + "f\n");
 	}
 	
+	// Create a CLKernel which can execute this program
 	public CLKernel getKernel(){
 		if (program == null)
 			initialize();
@@ -59,6 +64,7 @@ public class CLProgram{
 		return kernel;
 	}
 	
+	// Builds the program. Called once after all constsnts are added.
 	public void initialize(){
 		builder.insert(0, "#pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable\n");
 		
@@ -76,6 +82,7 @@ public class CLProgram{
         status[0] = clBuildProgram(program, 1, new cl_device_id[]{device.device}, options, null, null);
 	}
 	
+	// Cleanup all resources
 	public void dispose(){
 		for (CLKernel kernel : kernels)
 			kernel.dispose();

@@ -1,4 +1,6 @@
 
+// Impart an acceleration due to a fixed force field
+
 __kernel
 void addForce2D(__global const float* forcedat,
 		  __global float* veldat){

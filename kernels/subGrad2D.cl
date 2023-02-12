@@ -1,4 +1,6 @@
 
+// Subtract gradient of input quantity from in/out buffer.
+
 __kernel
 void subGrad2D(__global const float* indat,
 		  __global float* outdatX,

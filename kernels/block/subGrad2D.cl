@@ -1,4 +1,8 @@
 
+// Subtract gradient of input quantity from in/out buffer.
+// This is implemented as a block operation, with threads in the group synchronously loading the block data
+// into a local buffer before operating to avoid redundant memory transfers
+
 __kernel
 void subGrad2D(__global const float* indat,
 		  __global float* outdatX,

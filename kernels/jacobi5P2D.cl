@@ -1,4 +1,6 @@
 
+// Single iteration of a Jacobi solver using a 5-point stencil.
+
 __kernel
 void jacobi5P2D(__global const float* bdat,
           __global float* xdat,

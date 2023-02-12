@@ -1,4 +1,6 @@
 
+// Advection of 4 quantities within a velocity field using 4th order Runge-Kutta for extrapolation of trajectory.
+
 struct BilinDat{
 	float amt;
 	float amtDx;

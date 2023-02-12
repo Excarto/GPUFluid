@@ -1,6 +1,8 @@
 import static org.jocl.CL.*;
 import org.jocl.*;
 
+// An operation for copying memory between buffers on the device. 
+
 public class CLCopy implements CLOperation{
 	
 	private final CLDevice device;

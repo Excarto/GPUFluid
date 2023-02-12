@@ -1,4 +1,6 @@
 
+// First iteration of a Jacobi solver, where the initial data is assumed to be zero.
+
 __kernel
 void jacobiFromZero2D(__global const float* bdat,
           __global float* xdat,

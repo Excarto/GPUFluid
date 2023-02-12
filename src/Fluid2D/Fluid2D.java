@@ -1,4 +1,7 @@
 
+// This calss encompasses the computational component of the 2D fluid sim. The device and buffers are initialized,
+// the main program defining an iteration of the sim is constructed from components
+
 public class Fluid2D{
 	
 	enum Stencil{
@@ -27,7 +30,7 @@ public class Fluid2D{
 	static final int[] PRESSURE_SOLVE_GRID = new int[]{10, 30, 150};
 	//static final int[] DIFFUSION_SOLVE_GRID = new int[]{10, 30, 150};
 	
-	float[] data;
+	float[] data; // Multi-purpose CPU-side data buffer
 	
 	CLDevice device;
 	CLBuffer[] dataBufs;
@@ -46,7 +49,7 @@ public class Fluid2D{
 		this.viscosity = viscosity;
 		this.vortexEps = vortexEps;
 		
-		device = new CLDevice(true);
+		device = new CLDevice(false);
 		System.out.println("nqueues: " + device.numQueues);
 		
 		long maxMem = (device.globalMemSize - SPARE_MEM)/(1 + DATA_PER_CELL);
@@ -56,6 +59,8 @@ public class Fluid2D{
 		data = new float[dim.sizeX*dim.sizeY];
 		String[][] dimConstants = dim.getConstants();
 		
+		// ------------------ Initialize data buffers ------------------
+		
 		dataBufs = new CLBuffer[DATA_PER_CELL];
 		CLBuffer[] workBufs = new CLBuffer[DATA_PER_CELL];
 		
@@ -64,6 +69,8 @@ public class Fluid2D{
 			forceBufs[i] = device.getBuffer(data.length, false, true);
 		
 		sourceBuf = device.getBuffer(data.length, false, true);
+		
+		// ------------------ Initialize the various programs ------------------
 		
 		CLProgram advectProgram = device.getProgram("advect" + DATA_PER_CELL + "RK2D",
 				new long[]{dim.groupSize*dim.numBlocksX, dim.numBlocksY},
@@ -100,6 +107,8 @@ public class Fluid2D{
 				new long[]{dim.groupSize*dim.numBlocksX, dim.numBlocksY},
 				new long[]{dim.groupSize, 1});
 		subGradProgram.addConstants(dimConstants);
+		
+		// ------------------ Initialize operations ------------------
 		
 		CLCopy[] copyOps = new CLCopy[DATA_PER_CELL];
 		for (int i = 0; i < DATA_PER_CELL; i++){
@@ -193,17 +202,13 @@ public class Fluid2D{
 				pressureAlpha, pressureBeta,
 				true
 		);
-		/*GPUOperation pressureOp = new JacobiSolve2DOp(device,
-				workBufs[DIV_INDEX], workBufs[P_INDEX],
-				dim, 50,
-				pressureAlpha, pressureBeta,
-				true, true
-		);*/
 		
 		CLKernel projectOp = subGradProgram.getKernel();
 		projectOp.setArg(0, workBufs[P_INDEX]);
 		projectOp.setArg(1, dataBufs[VX_INDEX]);
 		projectOp.setArg(2, dataBufs[VY_INDEX]);
+		
+		// ------------------ Define the global iteration from the various sub-operations ------------------
 		
 		iteration = new OpChain(new CLOperation[]{
 				new OpGroup(copyOps),
@@ -224,7 +229,6 @@ public class Fluid2D{
 	}
 	
 	public void iterate(){
-		
 		device.run(iteration);
 	}
 	
